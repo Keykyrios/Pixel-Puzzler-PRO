@@ -5,12 +5,12 @@ import { getFirestore, collection, getDocs, addDoc, query, orderBy, limit, serve
 
 // --- PASTE YOUR FIREBASE CONFIG HERE ---
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+     apiKey: "AIzaSyAyC2Uu9ACRjcsFUE4BP7Kh8GqvJtSUeCY",
+   authDomain: "pixel-puzzler-pro.firebaseapp.com", 
+   projectId: "pixel-puzzler-pro", 
+   storageBucket: "pixel-puzzler-pro.firebasestorage.app", 
+   messagingSenderId: "458026864314", 
+   appId: "1:458026864314:web:e04b733e04b9fe599bfc83"
 };
 // --- Initialize Firebase and Firestore ---
 const app = initializeApp(firebaseConfig);
@@ -657,3 +657,4 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 
 });
+
