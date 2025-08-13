@@ -1,23 +1,20 @@
 
+// ✨ Import all the functions we need from the Firebase SDKs ✨
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-// ---
-// NOTE: I'm using a placeholder config here. You should use the one you have saved!
-// ---
+// --- PASTE YOUR FIREBASE CONFIG HERE ---
 const firebaseConfig = {
-   apiKey: "AIzaSyAyC2Uu9ACRjcsFUE4BP7Kh8GqvJtSUeCY",
-   authDomain: "pixel-puzzler-pro.firebaseapp.com", 
-   projectId: "pixel-puzzler-pro", 
-   storageBucket: "pixel-puzzler-pro.firebasestorage.app", 
-   messagingSenderId: "458026864314", 
-   appId: "1:458026864314:web:e04b733e04b9fe599bfc83",    
-   measurementId: "G-GHG81VHF6M" "
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
-
-// --- ✨ NEW: Initialize Firebase and Firestore ---
+// --- Initialize Firebase and Firestore ---
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app); // This 'db' object is our connection to the database!
+const db = getFirestore(app);
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= I. CONSTANTS & DOM ELEMENTS =========================
     // ===================================================================================
     
-    // ... (All your DOM element constants remain exactly the same) ...
     const screens = {
         mainMenu: document.getElementById('main-menu-screen'),
         category: document.getElementById('category-screen'),
@@ -74,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= II. GAME CONFIG & DATA ==============================
     // ===================================================================================
 
-    // ... (Your question, achievement, and avatar data remains the same) ...
     const TIME_PER_QUESTION = 15;
     const POINTS_PER_CORRECT_ANSWER = 100;
     const TIME_BONUS_MULTIPLIER = 10;
@@ -153,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= III. STATE VARIABLES ================================
     // ===================================================================================
     
-    // ... (The rest of your state variables are the same) ...
     let playerData = {};
     let currentCategory = '';
     let score = 0;
@@ -173,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= IV. INITIALIZATION ==================================
     // ===================================================================================
 
-    // The init() function remains the same, it just orchestrates everything.
     function init() {
         loadPlayerData();
         setupTheme();
@@ -185,18 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('mainMenu');
     }
     
-    // All setup functions (loadPlayerData, setupTheme, etc.) remain the same.
-    // They are all about setting up the initial state from localStorage.
     function loadPlayerData() {
         const savedData = JSON.parse(localStorage.getItem('pixelPuzzlerPRO'));
         playerData = savedData || {
             name: '',
             avatar: avatars[0].url,
-            // ✨ REMOVED: highScores are no longer stored locally!
             achievements: {},
             stats: { gamesPlayed: 0, categoriesCompleted: {} }
         };
-        // We keep local storage for achievements and player info, but not for high scores.
     }
     function savePlayerData() {
         localStorage.setItem('pixelPuzzlerPRO', JSON.stringify(playerData));
@@ -248,8 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= V. CORE GAME FLOW ===================================
     // ===================================================================================
 
-    // All core game flow functions (startGame, setNextQuestion, etc.) are the same.
-    // The big changes are in how we handle the end of the game.
     function startGame(category) {
         playSound('start');
         currentCategory = category;
@@ -314,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestionIndex++;
         setTimeout(setNextQuestion, 2000); 
     }
-    function endGame() {
+    async function endGame() {
         playSound('end');
         showScreen('end');
         const accuracy = shuffledQuestions.length > 0 ? (correctAnswers / shuffledQuestions.length) * 100 : 0;
@@ -328,16 +315,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 playerData.stats.categoriesCompleted[currentCategory] = true;
             }
         }
+        await checkHighScore();
         checkAchievements(accuracy, avgTime);
-        checkHighScore(); // This function will now check against Firestore
-        savePlayerData(); // Save non-score data like achievements
+        savePlayerData();
     }
 
     // ===================================================================================
     // ============================= VI. HELPER & UI FUNCTIONS ===========================
     // ===================================================================================
     
-    // The rest of your helper, timer, and lifeline functions are unchanged.
     function showScreen(screenId) {
         for (const id in screens) {
             screens[id].classList.add('hide');
@@ -446,17 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================== IX. HIGH SCORE & ACHIEVEMENT LOGIC (FIRESTORE EDITION) ====
     // ===================================================================================
     
-    // ✨ NEW: Async function to check against Firestore!
     async function checkHighScore() {
         try {
-            // Create a query to get the top 10 scores, but we only need the 10th one to compare.
             const highscoresRef = collection(db, "highscores");
             const q = query(highscoresRef, orderBy("score", "desc"), limit(MAX_HIGH_SCORES));
             const querySnapshot = await getDocs(q);
             
             let lowestHighScore = -1;
             if (querySnapshot.docs.length === MAX_HIGH_SCORES) {
-                // Get the score of the last document in the top 10 list
                 lowestHighScore = querySnapshot.docs[querySnapshot.docs.length - 1].data().score;
             }
 
@@ -471,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✨ NEW: Async function to save the score to Firestore!
     async function saveHighScore() {
         saveScoreBtn.disabled = true;
         saveScoreBtn.innerText = "Saving...";
@@ -480,15 +462,14 @@ document.addEventListener('DOMContentLoaded', () => {
             name: playerData.name, 
             avatar: playerData.avatar, 
             score: score,
-            timestamp: serverTimestamp() // Adds a server-side timestamp
+            timestamp: serverTimestamp()
         };
 
         try {
             const highscoresRef = collection(db, "highscores");
             await addDoc(highscoresRef, newScore);
-            console.log("High score saved successfully!");
             unlockAchievement('highScorer');
-            savePlayerData(); // Save the new achievement status
+            savePlayerData();
         } catch (error) {
             console.error("Error saving high score: ", error);
             alert("Could not save high score. Please try again.");
@@ -499,11 +480,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✨ NEW: Async function to display scores from Firestore!
     async function displayHighScores() {
-        highScoresList.innerHTML = '<li>Loading...</li>'; // Show a loading state
+        highScoresList.innerHTML = '<li>Loading...</li>';
         try {
-            // This is the magic! Create a query to get the top scores, sorted by score descending.
             const highscoresRef = collection(db, "highscores");
             const q = query(highscoresRef, orderBy("score", "desc"), limit(MAX_HIGH_SCORES));
 
@@ -514,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Map the results from the database to HTML list items
             highScoresList.innerHTML = querySnapshot.docs.map((doc, index) => {
                 const entry = doc.data();
                 return `
@@ -533,12 +511,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✨ UPDATED: Explain why clearing scores is now a manual process.
     function clearHighScores() {
         alert("For security, high scores must now be deleted manually from the Firebase Console. This prevents players from wiping the global leaderboard!");
     }
 
-    // The achievement logic remains the same, as it's stored locally.
     function checkAchievements(accuracy, avgTime) {
         if (!playerData.achievements.firstGame) unlockAchievement('firstGame');
         if (accuracy === 100) unlockAchievement('perfectScore');
@@ -623,13 +599,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================== XI. EVENT LISTENERS ====================================
     // ===================================================================================
     function setupEventListeners() {
-        // This navigation logic is the same, but the functions it calls (like displayHighScores) are now async!
         navButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 playSound('click');
-                const targetCamel = e.currentTarget.dataset.nav;
+                const targetKebab = e.currentTarget.dataset.nav;
+                const targetCamel = targetKebab.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+                
                 if (targetCamel === 'highScores') displayHighScores();
                 if (targetCamel === 'achievements') displayAchievements();
+                
                 showScreen(targetCamel);
             });
         });
