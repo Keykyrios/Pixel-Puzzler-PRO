@@ -1,3 +1,12 @@
+/**
+ * Pixel Puzzler PRO - script.js
+ * Version 3.2.0:
+ * - REMOVED: "Clear All Scores" functionality from the client-side for security.
+ * This must now be done manually in the Firebase console.
+ *
+ * @version 3.2.0
+ * @author Gemini & The User
+ */
 
 // ✨ Import all the functions we need from the Firebase SDKs ✨
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -54,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const highScoreForm = document.getElementById('high-score-form');
     const saveScoreBtn = document.getElementById('save-score-btn');
     const highScoresList = document.getElementById('high-scores-list');
-    const clearScoresBtn = document.getElementById('clear-scores-btn');
+    // ✨ REMOVED: const clearScoresBtn = document.getElementById('clear-scores-btn');
     const achievementsGrid = document.getElementById('achievements-grid');
     const achievementToastContainer = document.getElementById('achievement-toast-container');
     const sounds = {
@@ -511,9 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function clearHighScores() {
-        alert("For security, high scores must now be deleted manually from the Firebase Console. This prevents players from wiping the global leaderboard!");
-    }
+    // ✨ REMOVED: This function is gone. Management is now done in the Firebase console.
+    // function clearHighScores() { ... }
 
     function checkAchievements(accuracy, avgTime) {
         if (!playerData.achievements.firstGame) unlockAchievement('firstGame');
@@ -635,10 +643,8 @@ document.addEventListener('DOMContentLoaded', () => {
             playSound('click');
             saveHighScore();
         });
-        clearScoresBtn.addEventListener('click', () => {
-            playSound('wrong');
-            clearHighScores();
-        });
+        
+        // ✨ REMOVED: The event listener for the clear scores button is gone.
         
         themeToggle.addEventListener('change', () => {
             document.body.classList.toggle('dark-mode');
