@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================= II. GAME CONFIG & DATA ==============================
     // ===================================================================================
 
-    const TIME_PER_QUESTION = 15; // seconds
+    const TIME_PER_QUESTION = 15;
     const POINTS_PER_CORRECT_ANSWER = 100;
     const TIME_BONUS_MULTIPLIER = 10;
     const MAX_HIGH_SCORES = 10;
@@ -85,21 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'avatar4', url: 'https://api.dicebear.com/8.x/pixel-art/svg?seed=player4' },
     ];
     
-    // Using the user-provided assets for achievement icons
     const achievements = {
-        firstGame: { id: 'firstGame', title: "Welcome, Puzzler!", desc: "Play your first game to completion.", icon: 'https://i.imgur.com/KQloL0a.png' },
+        firstGame: { id: 'firstGame', title: "Welcome, Puzzler!", desc: "Play your first game to completion.", icon: 'https://i.imgur.com/KQloL0a.png', toastClass: 'bigger-icon' },
         scienceNovice: { id: 'scienceNovice', title: "Lab Assistant", desc: "Complete a Science quiz.", icon: 'https://static.vecteezy.com/system/resources/previews/027/205/877/non_2x/isolated-simple-microscope-for-laboratory-in-pixel-art-free-png.png' },
-        historyBuff: { id: 'historyBuff', title: "Time Traveler", desc: "Complete a History quiz.", icon: 'https://i.imgur.com/7blMWk1.png' },
+        historyBuff: { id: 'historyBuff', title: "Time Traveler", desc: "Complete a History quiz.", icon: 'https://png.pngtree.com/png-clipart/20240508/original/pngtree-scroll-paper-in-pixel-art-style-png-image_15040538.png' },
         movieManic: { id: 'movieManic', title: "Film Critic", desc: "Complete a Movies quiz.", icon: 'https://i.imgur.com/MV0IpE4.png' },
         generalGenius: { id: 'generalGenius', title: "Jack of All Trades", desc: "Complete a General quiz.", icon: 'https://preview.redd.it/the-earth-original-size-16x16-pixels-v0-0nejy0dgpdq81.png?auto=webp&s=4391db252278d02f5fbc10e43fecb0487f9ad696' },
         perfectScore: { id: 'perfectScore', title: "Flawless Victory", desc: "Get a perfect score in any quiz.", icon: 'https://static.vecteezy.com/system/resources/thumbnails/027/517/684/small_2x/pixel-art-gold-number-100-icon-png.png' },
-        speedDemon: { id: 'speedDemon', title: "Speed Demon", desc: "Finish a quiz with avg. time under 5s.", icon: 'https://i.imgur.com/SPuppBo.png' },
+        speedDemon: { id: 'speedDemon', title: "Speed Demon", desc: "Finish a quiz with avg. time under 5s.", icon: 'https://png.pngtree.com/png-clipart/20250514/original/pngtree-minimalist-pixel-lightning-bolt-on-transparent-background-vector-png-image_20971493.png' },
         clutchPlayer: { id: 'clutchPlayer', title: "Clutch Player", desc: "Answer correctly with < 2s left.", icon: 'https://static.vecteezy.com/system/resources/previews/054/978/930/non_2x/game-hourglass-pixelated-free-png.png' },
-        highScorer: { id: 'highScorer', title: "On The Board!", desc: "Make it onto the Hall of Fame.", icon: 'https://i.imgur.com/W2ABw4n.png' },
+        highScorer: { id: 'highScorer', title: "On The Board!", desc: "Make it onto the Hall of Fame.", icon: 'https://png.pngtree.com/png-vector/20240827/ourlarge/pngtree-pixel-art-trophies-vector-png-image_13598926.png' },
         marathoner: { id: 'marathoner', title: "Quiz Marathoner", desc: "Complete all four categories.", icon: 'https://static.vecteezy.com/system/resources/previews/055/855/475/non_2x/gold-medal-pixel-art-style-winner-medal-first-place-second-and-third-8-bit-sports-medal-png.png' }
     };
     
-    // Expanded question list to 10 per category
     const questions = {
         science: [
             { question: "What is the powerhouse of the cell?", answers: [{ text: "Mitochondria", correct: true }, { text: "Nucleus", correct: false }, { text: "Ribosome", correct: false }, { text: "Chloroplast", correct: false }] },
@@ -285,7 +283,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuestion(questionData) {
         questionElement.innerText = questionData.question;
         answerButtonsContainer.innerHTML = '';
-        questionData.answers.forEach(answer => {
+
+        // *** FIX: Randomize the order of answers before displaying them ***
+        const shuffledAnswers = [...questionData.answers].sort(() => Math.random() - 0.5);
+
+        shuffledAnswers.forEach(answer => {
             const button = document.createElement('button');
             button.innerText = answer.text;
             button.classList.add('btn');
@@ -338,10 +340,12 @@ document.addEventListener('DOMContentLoaded', () => {
         avgTimeElement.innerText = `${avgTime}s`;
         
         playerData.stats.gamesPlayed = (playerData.stats.gamesPlayed || 0) + 1;
-        if (!playerData.stats.categoriesCompleted[currentCategory]) {
-            playerData.stats.categoriesCompleted[currentCategory] = true;
+        if (accuracy === 100) { // Only count perfect games as "completed" for the marathon
+             if (!playerData.stats.categoriesCompleted[currentCategory]) {
+                playerData.stats.categoriesCompleted[currentCategory] = true;
+            }
         }
-
+        
         checkAchievements(accuracy, avgTime);
         checkHighScore();
         savePlayerData();
@@ -352,10 +356,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================================
 
     function showScreen(screenId) {
-        for (const screen in screens) {
-            screens[screen].classList.add('hide');
+        for (const id in screens) {
+            screens[id].classList.add('hide');
         }
-        screens[screenId].classList.remove('hide');
+        // If the screenId exists in our screens object, show it. This prevents errors.
+        if(screens[screenId]) {
+            screens[screenId].classList.remove('hide');
+        } else {
+            console.error(`Screen with ID "${screenId}" not found.`);
+            screens.mainMenu.classList.remove('hide'); // Default to main menu on error
+        }
     }
 
     function resetState() {
@@ -551,8 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
         playSound('achievement');
         const toast = document.createElement('div');
         toast.classList.add('toast');
+        
+        const toastIconClass = achievement.toastClass ? `toast-icon ${achievement.toastClass}` : 'toast-icon';
         toast.innerHTML = `
-            <div class="toast-icon"><img src="${achievement.icon}" alt="Achievement Icon"></div>
+            <div class="${toastIconClass}"><img src="${achievement.icon}" alt="Achievement Icon"></div>
             <div class="toast-content">
                 <h4>Achievement Unlocked!</h4>
                 <p>${achievement.title}</p>
@@ -569,9 +581,9 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.addEventListener('transitionend', () => {
                 toast.remove();
                 isToastVisible = false;
-                processAchievementQueue(); // Check for next toast
+                processAchievementQueue();
             });
-        }, 4000); // Toast visible for 4 seconds
+        }, 4000); 
     }
 
     function displayAchievements() {
@@ -607,13 +619,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================================
 
     function setupEventListeners() {
+        // *** FIX: Robust navigation logic to handle all nav buttons ***
         navButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 playSound('click');
-                const target = e.currentTarget.dataset.nav;
-                if (target === 'high-scores') displayHighScores();
-                if (target === 'achievements') displayAchievements();
-                showScreen(target);
+                const targetKebab = e.currentTarget.dataset.nav; // e.g., "main-menu"
+                // Convert kebab-case to camelCase (e.g., "main-menu" -> "mainMenu") to match the screens object keys
+                const targetCamel = targetKebab.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+                
+                // Pre-navigation tasks
+                if (targetCamel === 'highScores') displayHighScores();
+                if (targetCamel === 'achievements') displayAchievements();
+                
+                showScreen(targetCamel);
             });
         });
 
